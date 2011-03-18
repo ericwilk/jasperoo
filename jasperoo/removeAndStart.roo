@@ -1,0 +1,3 @@
+addon remove --bundleSymbolicName ca.digitalface.jasperoo                                                                
+osgi start --url file:///home/waldo/projects/workspace/jasperoo/target/ca.digitalface.jasperoo-0.1.0.BUILD-SNAPSHOT.jar
+
