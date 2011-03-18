@@ -33,14 +33,11 @@ import org.springframework.roo.model.JavaPackage;
 import org.springframework.roo.model.JavaType;
 import org.springframework.roo.process.manager.FileManager;
 import org.springframework.roo.process.manager.MutableFile;
-import org.springframework.roo.project.Configuration;
 import org.springframework.roo.project.Dependency;
 import org.springframework.roo.project.DependencyScope;
 import org.springframework.roo.project.DependencyType;
-import org.springframework.roo.project.Execution;
 import org.springframework.roo.project.Path;
 import org.springframework.roo.project.PathResolver;
-import org.springframework.roo.project.Plugin;
 import org.springframework.roo.project.ProjectMetadata;
 import org.springframework.roo.project.ProjectOperations;
 import org.springframework.roo.project.Repository;
@@ -52,18 +49,15 @@ import org.springframework.roo.support.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import ca.digitalface.jasperoo.utils.TokenReplacementFileCopyUtils;
 
 /**
- * Implementation of operations this add-on offers.
+ * Implementation of Jasperoo Operations.
  * 
  * @since 1.1
  */
 @Component
-// Use these Apache Felix annotations to register your commands class in the Roo
-// container
 @Service
 public class JasperooOperationsImpl implements JasperooOperations {
 
@@ -95,10 +89,21 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	@Reference
 	private TypeLocationService typeLocationService;
 
+	/**
+	 * Use the FileManager to manipulate the files in the target project.
+	 */
 	@Reference
 	private FileManager fileManager;
+	
+	/**
+	 * Use the PathResolver to facilitate access to the various project source areas of the target project.
+	 */
 	@Reference
 	private PathResolver pathResolver;
+	
+	/**
+	 * The is the Roo shell.
+	 */
 	@Reference
 	private Shell shell;
 
@@ -172,8 +177,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	public void setup(String controllerPackage) {
 		
 		// Add all new dependencies to pom.xml
-		//projectOperations.addDependency(new Dependency("ca.digitalface.jasperoo", "ca.digitalface.jasperoo", "0.1.0.BUILD-SNAPSHOT", DependencyType.JAR, DependencyScope.PROVIDED));
-
 		projectOperations.addDependency(new Dependency(
 				"org.springframework", "spring-context", "${spring.version}"));
 		projectOperations.addDependency(new Dependency(
@@ -293,10 +296,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			throw new IllegalStateException(e);
 		}
 		
-//		<bean id="viewResolver" class="org.springframework.web.servlet.view.ResourceBundleViewResolver">
-//			<property name="basename" value="views"/>
-//		</bean>
-
 		Element viewResolver = new XmlElementBuilder("bean", webMVCConfigDoc)
 			.addAttribute("id", "viewResolver")
 			.addAttribute("class", "org.springframework.web.servlet.view.ResourceBundleViewResolver")
@@ -331,8 +330,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		}
 
 		copySetupFilesIntoProject(controllerPackage);
-		//addMenuCategory();
-		
 	}
 
 	private void copySetupFilesIntoProject(String controllerPackage) {
@@ -413,9 +410,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 		String finalEntityPackage = entityPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
-
-		// String entityName =
-		// finalEntityPackage.substring(finalEntityPackage.lastIndexOf("."));
 
 		String reportTitle = "label_" + finalEntityPackage.replace(".", "_")
 				+ "_" + entityName.toLowerCase() + "_plural";
@@ -771,13 +765,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	}
 
 	/**
-	 * This method returns the plural term as per inflector. ATTENTION: this
-	 * method does NOT take @RooPlural into account. Use getPlural(..) instead!
+	 * This method returns the plural of the term specified in English. 
+	 * ATTENTION: this method does NOT take @RooPlural into account.
 	 * 
 	 * @param term
 	 *            The term to be pluralized
-	 * @param locale
-	 *            Locale
 	 * @return pluralized term
 	 */
 	public String getPlural(String term) {
@@ -787,33 +779,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			// Inflector failed (see for example ROO-305), so don't pluralize it
 			return term;
 		}
-	}
-
-	public void setupGoogleCode() {
-
-		// Install the add-on Google code repository needed to get the
-		// annotation
-		projectOperations.addRepository(new Repository(
-				"Jasperoo Roo add-on repository",
-				"Jasperoo Roo add-on repository",
-				"https://ca-digitalface-jasperoo.googlecode.com/svn/repo"));
-
-		List<Dependency> dependencies = new ArrayList<Dependency>();
-
-		// Install the dependency on the add-on jar (
-		dependencies.add(new Dependency("ca.digitalface.jasperoo",
-				"ca.digitalface.jasperoo", "0.1.0.BUILD-SNAPSHOT",
-				DependencyType.JAR, DependencyScope.PROVIDED));
-
-		// Install dependencies defined in external XML file
-		for (Element dependencyElement : XmlUtils.findElements(
-				"/configuration/batch/dependencies/dependency",
-				XmlUtils.getConfiguration(getClass()))) {
-			dependencies.add(new Dependency(dependencyElement));
-		}
-
-		// Add all new dependencies to pom.xml
-		projectOperations.addDependencies(dependencies);
 	}
 
 }
