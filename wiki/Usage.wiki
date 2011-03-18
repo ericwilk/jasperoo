@@ -12,7 +12,7 @@ addon remove --bundleSymbolicName ca.digitalface.jasperoo
 }}}
 2. Install and start the jasperoo with:
 {{{
-osgi start --url file:///home/waldo/projects/workspace/jasperoo/target/ca.digitalface.jasperoo-0.1.0.BUILD-SNAPSHOT.jar
+osgi start --url http://s.digitalface.ca/jasperoo-latest
 }}}
 
 == Setup ==
