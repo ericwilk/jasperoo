@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>ca.digitalface.jasperoo</groupId>
-  <artifactId>ca.digitalface.jasperoo</artifactId>
+  <groupId>ca.digitalface.roo</groupId>
+  <artifactId>jasperoo-addon</artifactId>
   <packaging>bundle</packaging>
   <version>0.1.0.BUILD-SNAPSHOT</version>
-  <name>ca-digitalface-jasperoo</name>
+  <name>jasperoo</name>
   <organization>
     <name>Digital Face</name>
     <url>www.digitalface.ca</url>
   </organization>
   <licenses>
     <license>
-      <name>&gt;GNU General Public License (GPL), Version 3.0</name>
+      <name>GNU General Public License (GPL), Version 3.0</name>
       <url>http://www.gnu.org/copyleft/gpl.html</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
   <description>A Roo add-on to integrate Jasper Reports.</description>
-  <url>http://www.digitalface.ca</url>
+  <url>https://code.google.com/p/jasperoo/</url>
   <properties>
   	<roo.version>1.1.2.RELEASE</roo.version>
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <google.code.project.name>${project.name}</google.code.project.name>
-    <repo.folder>ca/digitalface/jasperoo</repo.folder>
+    <repo.folder>jasperoo</repo.folder>
   </properties>
   <repositories>
     <repository>
@@ -199,7 +199,7 @@
         <configuration>
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Copyright>Copyright ${project.organization.name}. All Rights Reserved.</Bundle-Copyright>
+            <Bundle-Copyright>Copyright 2011 ${project.organization.name}. All Rights Reserved.</Bundle-Copyright>
             <Bundle-DocURL>${project.url}</Bundle-DocURL>
           </instructions>
           <remoteOBR>true</remoteOBR>

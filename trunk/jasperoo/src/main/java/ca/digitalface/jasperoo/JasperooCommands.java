@@ -10,17 +10,16 @@ import org.springframework.roo.shell.CliOption;
 import org.springframework.roo.shell.CommandMarker;
 
 /**
- * Sample of a command class. The command class is registered by the Roo shell following an
- * automatic classpath scan. You can provide simple user presentation-related logic in this
- * class. You can return any objects from each method, or use the logger directly if you'd
- * like to emit messages of different severity (and therefore different colours on 
- * non-Windows systems).
+ * The Spring ROO command class. The command class is registered by the Roo shell following an
+ * automatic classpath scan.
  * 
- * @since 1.1
+ * @since 0.1.0
+ * @author Waldo Rochow
+ * 
  */
-@Component // Use these Apache Felix annotations to register your commands class in the Roo container
+@Component
 @Service
-public class JasperooCommands implements CommandMarker { // All command types must implement the CommandMarker interface
+public class JasperooCommands implements CommandMarker {
 	
 	/**
 	 * Get a reference to the JasperooOperations from the underlying OSGi container
@@ -42,11 +41,15 @@ public class JasperooCommands implements CommandMarker { // All command types mu
 	public boolean isCommandAvailable() {
 		return operations.isCommandAvailable();
 	}
-	
+
 	/**
-	 * This method registers a command with the Roo shell. It also offers a mandatory command attribute.
+	 * Generate a report for the entity specified. 
 	 * 
-	 * @param type 
+	 * @param target <b>mandatory</b>, The entity to list in this report.
+	 * @param id <b>not mandatory</b>, If specified, a "Detail" report is generated for the entity identified, otherwise a "List" report is generated.
+	 * @param finder <b>not mandatory</b>, help = "If specified, this finder will produce the resultset to be passed to the report.
+	 * @param entityPackage <b>not mandatory</b>, The location of the Entities. Default: "~.domain".
+	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
 	 */
 	@CliCommand(value = "jasperoo add", help = "Generate a report for the entity specified.")
 	public void add(@CliOption(key = "type", mandatory = true, help = "The entity to list in this report.") JavaType target,
@@ -56,20 +59,23 @@ public class JasperooCommands implements CommandMarker { // All command types mu
 			@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {
 		operations.addReportByType(target, id, finder, entityPackage, controllerPackage);
 	}
-	
+
 	/**
-	 * This method registers a command with the Roo shell. It has no command attribute.
+	 * Generate a "List" report for all project entities. Same as calling "<b>jasperoo add</b>" on each entity.
 	 * 
+	 * @param entityPackage <b>not mandatory</b>, The location of the Entities. Default: "~.domain".
+	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
 	 */
-	@CliCommand(value = "jasperoo all", help = "Generate a 'List' report for all project entities. Same as calling \"jasperoo add\" on each entity.")
+	@CliCommand(value = "jasperoo all", help = "Generate a \"List\" report for all project entities. Same as calling \"jasperoo add\" on each entity.")
 	public void all(@CliOption(key = "entityPackage", mandatory = false, help = "The location of the Entities.", unspecifiedDefaultValue="~.domain") String entityPackage, 
 			@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {
 		operations.addListReportForAll(entityPackage, controllerPackage);
 	}
-	
+
 	/**
-	 * This method registers a command with the Roo shell. It has no command attribute.
+	 * Integrate Jasper Reports into this Roo application. Must be called before calling "<b>jasperoo add</b>" or "<b>jasperoo all</b>".
 	 * 
+	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
 	 */
 	@CliCommand(value = "jasperoo setup", help = "Integrate Jasper Reports into this Roo application.")
 	public void setup(@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {

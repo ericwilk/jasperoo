@@ -1,1 +1,5 @@
-Your license goes here
+Jasperoo is protected by the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 (http://www.gnu.org/licenses/gpl.txt).
+
+For information about Jasperoo, please contact DigitalFace at jasperoo@digitalface.ca.
+
+No warranty is offered or implied.
