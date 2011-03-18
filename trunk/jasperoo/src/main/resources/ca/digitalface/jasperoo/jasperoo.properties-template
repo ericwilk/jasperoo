@@ -1,3 +1,5 @@
+# These are i18n messages needed for the Jasper Reports.
+# This file is created by "jasperoo setup", and modified by "jasperoo add" 
 jasperoo.page=Page
 jasperoo.page.of=of
 jasperoo.id=ID

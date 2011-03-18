@@ -166,9 +166,8 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			String controllerPackage) {
 		// Use the TypeLocationService to scan project for all types with a
 		// specific annotation
-		for (JavaType type : typeLocationService
-				.findTypesWithAnnotation(new JavaType(
-						"org.springframework.roo.addon.javabean.RooJavaBean"))) {
+		for (JavaType type : typeLocationService.findTypesWithAnnotation(
+				new JavaType("org.springframework.roo.addon.javabean.RooJavaBean"))) {
 			addReportByType(type, null, null, entityPackage, controllerPackage);
 		}
 	}
@@ -332,6 +331,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		copySetupFilesIntoProject(controllerPackage);
 	}
 
+	/**
+	 * Populates the host project with the files required to setup the addon, and calls for the insertion of the requires i18n messages.
+	 * 
+	 * @param controllerPackage The location of the Web Controllers. Default: "~.web"
+	 */
 	private void copySetupFilesIntoProject(String controllerPackage) {
 
 		ProjectMetadata projectMetadata = (ProjectMetadata) metadataService
@@ -392,11 +396,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	}
 
 	/**
-	 * copy templates, copy jrxml, update ReportController, update
-	 * views.properties, insert i18n messages.
+	 * Copies the files required for the requested report, updates the 
+	 * ReportController declares the new views required by the requested report 
+	 * and inserted the required i18n messages.
 	 * 
-	 * @param entityPackage
-	 * @param controllerPackage
+	 * @param entityPackage The location of the Entities. Default: "~.domain".
+	 * @param controllerPackage The location of the Web Controllers. Default: "~.web"
 	 */
 	private void copyAddFilesIntoProject(String entityName,
 			String entityPackage, String controllerPackage) {
@@ -456,14 +461,19 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			}
 		}
 
-		insertViewMessages(entityName);
+		insertViewDeclarations(entityName);
 		insertJasperooMessages(entityName, reportTitle);
-		modifyController(entityName, finalEntityPackage,
-				finalControllerPackage, reportTitle);
+		modifyControllerListReport(entityName, finalEntityPackage,
+				finalControllerPackage);
 
 	}
 
-	private void insertViewMessages(String entityName) {
+	/**
+	 * Each report is a new view, here, the required views are declared in the views.properties.
+	 * 
+	 * @param entityName The Object upon which the report is based.
+	 */
+	private void insertViewDeclarations(String entityName) {
 		String applicationProperties = pathResolver.getIdentifier(
 				Path.SRC_MAIN_WEBAPP, "WEB-INF/classes/views.properties");
 
@@ -499,8 +509,15 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
-	private void modifyController(String entityName, String finalEntityPackage,
-			String finalControllerPackage, String reportTitle) {
+	/**
+	 * Inserts the required request handling method into the ReportController for a "List" report.
+	 * 
+	 * @param entityName The Object upon which the report is based.
+	 * @param finalEntityPackage The properly formatted package of the entity in question.
+	 * @param finalControllerPackage The properly formatted package of the ReportController.
+	 */
+	private void modifyControllerListReport(String entityName, String finalEntityPackage,
+			String finalControllerPackage) {
 		String controllerFile = pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
 				finalControllerPackage.replace('.', separator) + separator
 						+ "ReportController.java");
@@ -548,6 +565,7 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
+	
 	private void addMenuCategory() {
 
 		// add jasperReportsMultiFormatView to applicationContext
@@ -577,6 +595,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
+	/**
+	 * Manipulates the menu.jspx file to add the entries required for this report.
+	 * 
+	 * @param lowerCaseEntityName The name of the entity in question, in lower case.
+	 */
 	private void addMenuEntry(String lowerCaseEntityName) {
 
 		// add jasperReportsMultiFormatView to applicationContext
@@ -629,6 +652,9 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
+	/**
+	 * Modify application.properties by adding the i18n messages that apply to all reports.
+	 */
 	private void insertI18nSetupMessages() {
 		String applicationProperties = pathResolver.getIdentifier(
 				Path.SRC_MAIN_WEBAPP, "WEB-INF/i18n/application.properties");
@@ -665,6 +691,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
+	/**
+	 * Modify application.properties by adding the i18n messages that apply to this report.
+	 * 
+	 * @param entityName The name of the entity upon which the report is based.
+	 */
 	private void insertI18nAddMessages(String entityName) {
 		String applicationProperties = pathResolver.getIdentifier(
 				Path.SRC_MAIN_WEBAPP, "WEB-INF/i18n/application.properties");
@@ -703,6 +734,14 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
+	/**
+	 * The i18n messages that are displayed in reports are stored in a files 
+	 * called "jasperoo.properties" in the "WEB-INF/classes" folder. This 
+	 * method adds the requires messages for a given report. 
+	 * 
+	 * @param entityName The name of the entity upon which the report is based.
+	 * @param reportTitle The key that will be used to search for the report title.
+	 */
 	private void insertJasperooMessages(String entityName, String reportTitle) {
 		String applicationProperties = pathResolver.getIdentifier(
 				Path.SRC_MAIN_WEBAPP, "WEB-INF/classes/jasperoo.properties");
@@ -737,26 +776,33 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	}
 
-	private String convertStreamToString(InputStream is) throws IOException {
+	/**
+	 * A utility method to convert an input stream to a String.
+	 * 
+	 * @param source The source input stream.
+	 * @return The source as a String, or an empty String if the source is null
+	 * @throws IOException If unable to read stream.
+	 */
+	private String convertStreamToString(InputStream source) throws IOException {
 		/*
 		 * To convert the InputStream to String we use the Reader.read(char[]
 		 * buffer) method. We iterate until the Reader return -1 which means
 		 * there's no more data to read. We use the StringWriter class to
 		 * produce the string.
 		 */
-		if (is != null) {
+		if (source != null) {
 			Writer writer = new StringWriter();
 
 			char[] buffer = new char[1024];
 			try {
-				Reader reader = new BufferedReader(new InputStreamReader(is,
+				Reader reader = new BufferedReader(new InputStreamReader(source,
 						"UTF-8"));
 				int n;
 				while ((n = reader.read(buffer)) != -1) {
 					writer.write(buffer, 0, n);
 				}
 			} finally {
-				is.close();
+				source.close();
 			}
 			return writer.toString();
 		} else {
