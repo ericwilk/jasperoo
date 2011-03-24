@@ -46,18 +46,16 @@ public class JasperooCommands implements CommandMarker {
 	 * Generate a report for the entity specified. 
 	 * 
 	 * @param target <b>mandatory</b>, The entity to list in this report.
-	 * @param id <b>not mandatory</b>, If specified, a "Detail" report is generated for the entity identified, otherwise a "List" report is generated.
-	 * @param finder <b>not mandatory</b>, help = "If specified, this finder will produce the resultset to be passed to the report.
+	 * @param finder <b>not mandatory</b>, help = "If specified, this finder will produce the resultset to be passed to the List report.
 	 * @param entityPackage <b>not mandatory</b>, The location of the Entities. Default: "~.domain".
 	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
 	 */
 	@CliCommand(value = "jasperoo add", help = "Generate a report for the entity specified.")
 	public void add(@CliOption(key = "type", mandatory = true, help = "The entity to list in this report.") JavaType target,
-			@CliOption(key = "id", mandatory = false, help = "If specified, a \"Detail\" report is generated for the entity identified, otherwise a \"List\" report is generated.") Long id,
-			@CliOption(key = "finder", mandatory = false, help = "If specified, this finder will produce the resultset to be passed to the report.") String finder,
+			@CliOption(key = "finder", mandatory = false, help = "If specified, this finder will produce the resultset to be passed to the List report.") String finder,
 			@CliOption(key = "entityPackage", mandatory = false, help = "The location of the Entities.", unspecifiedDefaultValue="~.domain") String entityPackage, 
 			@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {
-		operations.addReportByType(target, id, finder, entityPackage, controllerPackage);
+		operations.addReportByType(target, finder, entityPackage, controllerPackage);
 	}
 
 	/**
@@ -69,16 +67,18 @@ public class JasperooCommands implements CommandMarker {
 	@CliCommand(value = "jasperoo all", help = "Generate a \"List\" report for all project entities. Same as calling \"jasperoo add\" on each entity.")
 	public void all(@CliOption(key = "entityPackage", mandatory = false, help = "The location of the Entities.", unspecifiedDefaultValue="~.domain") String entityPackage, 
 			@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {
-		operations.addListReportForAll(entityPackage, controllerPackage);
+		operations.addReportsForAll(entityPackage, controllerPackage);
 	}
 
 	/**
 	 * Integrate Jasper Reports into this Roo application. Must be called before calling "<b>jasperoo add</b>" or "<b>jasperoo all</b>".
 	 * 
 	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
+	 * @param formats <b>not mandatory</b>, A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
 	 */
 	@CliCommand(value = "jasperoo setup", help = "Integrate Jasper Reports into this Roo application.")
-	public void setup(@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage) {
-		operations.setup(controllerPackage);
+	public void setup(@CliOption(key = "controllerPackage", mandatory = false, help = "The location of the Web Controllers.", unspecifiedDefaultValue="~.web") String controllerPackage,
+			@CliOption(key = "formats", mandatory = false, help = "A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: \"pdf,xls\".", unspecifiedDefaultValue="pdf,xls") String formats) {
+		operations.setup(controllerPackage, formats);
 	}
 }

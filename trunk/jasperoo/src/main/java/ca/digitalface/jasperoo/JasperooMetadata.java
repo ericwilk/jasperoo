@@ -11,6 +11,7 @@ import org.springframework.roo.classpath.details.FieldMetadataBuilder;
 import org.springframework.roo.classpath.details.MethodMetadata;
 import org.springframework.roo.classpath.details.MethodMetadataBuilder;
 import org.springframework.roo.classpath.details.annotations.AnnotatedJavaType;
+import org.springframework.roo.classpath.details.annotations.AnnotationMetadata;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadataBuilder;
 import org.springframework.roo.classpath.itd.AbstractItdTypeDetailsProvidingMetadataItem;
 import org.springframework.roo.classpath.itd.InvocableMemberBodyBuilder;
@@ -31,15 +32,18 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 	private static final String PROVIDES_TYPE_STRING = JasperooMetadata.class.getName();
 	private static final String PROVIDES_TYPE = MetadataIdentificationUtils.create(PROVIDES_TYPE_STRING);
 
+	
+	
 	public JasperooMetadata(String identifier, JavaType aspectName, PhysicalTypeMetadata governorPhysicalTypeMetadata) {
 		super(identifier, aspectName, governorPhysicalTypeMetadata);
 		Assert.isTrue(isValid(identifier), "Metadata identification string '" + identifier + "' does not appear to be a valid");
 
+		
 		// Adding a new sample field definition
-		builder.addField(getSampleField());
+		builder.addField(getReportableField());
 			
 		// Adding a new sample method definition
-		builder.addMethod(getSampleMethod());
+		builder.addMethod(getReportableMethod());
 		
 		// Create a representation of the desired output ITD
 		itdTypeDetails = builder.build();
@@ -50,23 +54,26 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 	 *
 	 * @return a FieldMetadata object
 	 */
-	private FieldMetadata getSampleField() {
+	private FieldMetadata getReportableField() {
 		// Note private fields are private to the ITD, not the target type, this is undesirable if a dependent method is pushed in to the target type
 		int modifier = 0;
+		
+		ArrayList<AnnotationMetadataBuilder> annotations = new ArrayList<AnnotationMetadataBuilder>();
+		annotations.add(new AnnotationMetadataBuilder(new JavaType("javax.persistence.Transient")));
 		
 		// Using the FieldMetadataBuilder to create the field definition. 
 		FieldMetadataBuilder fieldBuilder = new FieldMetadataBuilder(getId(), // Metadata ID provided by supertype
 			modifier, // Using package protection rather than private
-			new ArrayList<AnnotationMetadataBuilder>(), // No annotations for this field
-			new JavaSymbolName("sampleField"), // Field name
-			JavaType.STRING_OBJECT); // Field type
+			annotations, // Using @Transient
+			new JavaSymbolName("reportable"), // Field name
+			JavaType.BOOLEAN_PRIMITIVE); // Field type
 		
 		return fieldBuilder.build(); // Build and return a FieldMetadata instance
 	}
 	
-	private MethodMetadata getSampleMethod() {
+	private MethodMetadata getReportableMethod() {
 		// Specify the desired method name
-		JavaSymbolName methodName = new JavaSymbolName("sampleMethod");
+		JavaSymbolName methodName = new JavaSymbolName("isReportable");
 		
 		// Check if a method with the same signature already exists in the target type
 		MethodMetadata method = methodExists(methodName, new ArrayList<AnnotatedJavaType>());
@@ -89,10 +96,11 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 		
 		// Create the method body
 		InvocableMemberBodyBuilder bodyBuilder = new InvocableMemberBodyBuilder();
-		bodyBuilder.appendFormalLine("System.out.println(\"Hello World\");");
+		bodyBuilder.appendFormalLine("reportable = true;");
+		bodyBuilder.appendFormalLine("return reportable;");
 		
 		// Use the MethodMetadataBuilder for easy creation of MethodMetadata
-		MethodMetadataBuilder methodBuilder = new MethodMetadataBuilder(getId(), Modifier.PUBLIC, methodName, JavaType.VOID_PRIMITIVE, parameterTypes, parameterNames, bodyBuilder);
+		MethodMetadataBuilder methodBuilder = new MethodMetadataBuilder(getId(), Modifier.PUBLIC, methodName, JavaType.BOOLEAN_PRIMITIVE, parameterTypes, parameterNames, bodyBuilder);
 		methodBuilder.setAnnotations(annotations);
 		methodBuilder.setThrowsTypes(throwsTypes);
 		

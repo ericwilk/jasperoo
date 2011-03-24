@@ -13,5 +13,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface RooJasperoo {
+	
+	String getReportableMethod() default "isReportable";
+	
+	String getReportableField() default "reportable";
 }
 

@@ -3,6 +3,7 @@ package ca.digitalface.jasperoo;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,30 +11,29 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jvnet.inflector.Noun;
+import org.osgi.service.component.ComponentContext;
 import org.springframework.roo.classpath.PhysicalTypeDetails;
 import org.springframework.roo.classpath.PhysicalTypeIdentifier;
 import org.springframework.roo.classpath.PhysicalTypeMetadata;
 import org.springframework.roo.classpath.PhysicalTypeMetadataProvider;
 import org.springframework.roo.classpath.TypeLocationService;
+import org.springframework.roo.classpath.details.annotations.AnnotationMetadataBuilder;
 import org.springframework.roo.classpath.details.FieldMetadata;
-import org.springframework.roo.classpath.details.MemberHoldingTypeDetails;
+import org.springframework.roo.classpath.details.MemberFindingUtils;
 import org.springframework.roo.classpath.details.MutableClassOrInterfaceTypeDetails;
-import org.springframework.roo.classpath.itd.MemberHoldingTypeDetailsMetadataItem;
 import org.springframework.roo.metadata.MetadataService;
 import org.springframework.roo.model.JavaPackage;
 import org.springframework.roo.model.JavaSymbolName;
@@ -47,14 +47,13 @@ import org.springframework.roo.project.ProjectMetadata;
 import org.springframework.roo.project.ProjectOperations;
 import org.springframework.roo.shell.Shell;
 import org.springframework.roo.support.util.Assert;
+import org.springframework.roo.support.util.StringUtils;
 import org.springframework.roo.support.util.TemplateUtils;
 import org.springframework.roo.support.util.XmlElementBuilder;
 import org.springframework.roo.support.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import ca.digitalface.jasperoo.utils.TokenReplacementFileCopyUtils;
 
@@ -115,6 +114,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 	private static char separator = File.separatorChar;
 
+	private ComponentContext context;
+
+	protected void activate(ComponentContext context) {
+		this.context = context;
+	}
+
 	/** 
 	 * Entity types not in this list will be converted to String by default in the report.
 	 */
@@ -125,6 +130,8 @@ public class JasperooOperationsImpl implements JasperooOperations {
 					"java.lang.Short", "java.math.BigDecimal", "java.lang.Number",
 					"java.lang.String"};
 	
+	private static String[] validReportFormats = new String[]{"csv", "html", "odt", "pdf", "rtf", "xls", "xml"};
+	
 	/** {@inheritDoc} */
 	public boolean isCommandAvailable() {
 		// Check if a project has been created
@@ -132,11 +139,31 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	}
 
 	/** {@inheritDoc} */
-	public void addReportByType(JavaType javaType, Long id, String finder, String entityPackage, 
-			String controllerPackage) {
+	public void addReportByType(JavaType javaType, String finder, String entityPackage, String controllerPackage) {
 		// Use Roo's Assert type for null checks
 		Assert.notNull(javaType, "Java type required");
+		
+		String id = physicalTypeMetadataProvider.findIdentifier(javaType);
+		if (id == null) {
+			throw new IllegalArgumentException("Cannot locate source for '" + javaType.getFullyQualifiedTypeName() + "'");
+		}
 
+		// Obtain the physical type and itd mutable details
+		PhysicalTypeMetadata ptm = (PhysicalTypeMetadata) metadataService.get(id);
+		Assert.notNull(ptm, "Java source code unavailable for type " + PhysicalTypeIdentifier.getFriendlyName(id));
+		PhysicalTypeDetails ptd = ptm.getMemberHoldingTypeDetails();
+		Assert.notNull(ptd, "Java source code details unavailable for type " + PhysicalTypeIdentifier.getFriendlyName(id));
+		Assert.isInstanceOf(MutableClassOrInterfaceTypeDetails.class, ptd, "Java source code is immutable for type " + PhysicalTypeIdentifier.getFriendlyName(id));
+		MutableClassOrInterfaceTypeDetails mutableTypeDetails = (MutableClassOrInterfaceTypeDetails) ptd;
+
+		if (null == MemberFindingUtils.getAnnotationOfType(mutableTypeDetails.getAnnotations(), new JavaType(RooJasperoo.class.getName()))) {
+			JavaType rooJasperoo = new JavaType(RooJasperoo.class.getName());
+			if (!mutableTypeDetails.getAnnotations().contains(rooJasperoo)) {
+				AnnotationMetadataBuilder annotationBuilder = new AnnotationMetadataBuilder(rooJasperoo);
+				mutableTypeDetails.addTypeAnnotation(annotationBuilder.build());
+			}
+		}
+		
 		// Compute the Fully Qualified Name for the source JavaType
 		String fqEntityName = physicalTypeMetadataProvider.findIdentifier(javaType);
 		if (fqEntityName == null) {
@@ -144,18 +171,19 @@ public class JasperooOperationsImpl implements JasperooOperations {
 					+ javaType.getFullyQualifiedTypeName() + "'");
 		}
 
-		//if the id attribute is specified, this is a detail report.
-		boolean listReport = id == null;
-		
 		// The entity name is used all over.
 		String entityName = fqEntityName.substring(fqEntityName.lastIndexOf(".") + 1);
+
+		shell.executeCommand("focus --class "+entityPackage+"."+entityName);
+		shell.executeCommand("finder add --finderName find"+getPlural(entityName)+"ById");
 
 		// copy templates, copy jrxml, update ReportController, update
 		// views.properties, insert i18n messages
 		copyAddFilesIntoProject(entityName, finder, entityPackage, controllerPackage);
 
-		//manipulate report template
+		//manipulate report templates
 		modifyListReportTemplate(javaType, entityName);
+		modifyDetailReportTemplate(javaType, entityName);
 		
 		// generate menu entry
 		addMenuEntry(entityName.toLowerCase());
@@ -164,18 +192,18 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	}
 	
 	/** {@inheritDoc} */
-	public void addListReportForAll(String entityPackage,
+	public void addReportsForAll(String entityPackage,
 			String controllerPackage) {
 		// Use the TypeLocationService to scan project for all types with a
 		// specific annotation
 		for (JavaType type : typeLocationService.findTypesWithAnnotation(
 				new JavaType("org.springframework.roo.addon.javabean.RooJavaBean"))) {
-			addReportByType(type, null, null, entityPackage, controllerPackage);
+			addReportByType(type, null, entityPackage, controllerPackage);
 		}
 	}
 
 	/** {@inheritDoc} */
-	public void setup(String controllerPackage) {
+	public void setup(String controllerPackage, String formats) {
 		
 		// Add all new dependencies to pom.xml
 		projectOperations.addDependency(new Dependency(
@@ -186,6 +214,9 @@ public class JasperooOperationsImpl implements JasperooOperations {
 				"org.apache.poi", "poi", "3.2-FINAL"));
 		projectOperations.addDependency(new Dependency(
 				"org.springframework.roo.wrapping", "org.springframework.roo.wrapping.inflector","0.7.0.0001"));
+		
+		String currentJasperooVersion = context.getBundleContext().getBundle().getHeaders().get("Bundle-Version").toString();
+		projectOperations.addDependency(new Dependency("ca.digitalface", "ca.digitalface.jasperoo", currentJasperooVersion));
 
 		//add pluginNode to pom
 		String pomPath = pathResolver.getIdentifier(Path.ROOT, "pom.xml");
@@ -331,6 +362,18 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		}
 
 		copySetupFilesIntoProject(controllerPackage);
+		
+		if(StringUtils.hasText(formats)){
+			StringTokenizer stFormats = new StringTokenizer(formats,",", false);
+			while(stFormats.hasMoreTokens()){
+				String format = stFormats.nextToken();
+				if(Arrays.binarySearch(validReportFormats,format) >= 0){
+					modifyShowTagx(format);
+				} else {
+					System.out.println(format + " is not a valid report format, it will be ignored.");
+				}
+			}
+		}
 	}
 
 	/**
@@ -389,12 +432,67 @@ public class JasperooOperationsImpl implements JasperooOperations {
 						TemplateUtils.getTemplate(getClass(), file),
 						mutableFile.getOutputStream(), properties);
 
-				insertI18nSetupMessages();
+			} catch (IOException ioe) {
+				throw new IllegalStateException(ioe);
+			}
+		}
+		
+		insertI18nSetupMessages();
+
+		Map<String, String> imageMap = new HashMap<String, String>();
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+						+ "report-csv.png"),
+						"images" + separator + "report-csv.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-html.png"),
+				"images" + separator + "report-html.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-list.png"),
+				"images" + separator + "report-list.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-odt.png"),
+				"images" + separator + "report-odt.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-pdf.png"),
+				"images" + separator + "report-pdf.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-rtf.png"),
+				"images" + separator + "report-rtf.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-xls.png"),
+				"images" + separator + "report-xls.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report-xml.png"),
+				"images" + separator + "report-xml.png");
+
+		imageMap.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, "images"	+ separator 
+				+ "report.png"),
+				"images" + separator + "report.png");
+
+		for (Entry<String, String> image : imageMap.entrySet()) {
+			String path = image.getKey();
+			String file = image.getValue();
+			try {
+				File target = new File(path);
+				FileOutputStream fosTarget = new FileOutputStream(target);
+				
+				TokenReplacementFileCopyUtils.replaceAndCopy(
+						TemplateUtils.getTemplate(getClass(), file),
+						fosTarget);
 
 			} catch (IOException ioe) {
 				throw new IllegalStateException(ioe);
 			}
 		}
+		
 	}
 
 	/**
@@ -416,8 +514,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		String finalEntityPackage = entityPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
 
-		String reportTitle = "label_" + finalEntityPackage.replace(".", "_")
+		String listReportTitle = "label_" + finalEntityPackage.replace(".", "_")
 				+ "_" + entityName.toLowerCase() + "_plural";
+
+		String detailReportTitle = "label_" + finalEntityPackage.replace(".", "_")
+		+ "_" + entityName.toLowerCase();
 
 		String finalControllerPackage = controllerPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
@@ -428,7 +529,8 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		properties.put("__ENTITY_LEVEL_PACKAGE__", finalEntityPackage);
 		properties.put("__ENTITY_NAME__", entityName);
 		properties.put("__ENTITY_NAME_LOWER__", entityName.toLowerCase());
-		properties.put("__REPORT_TITLE__", reportTitle);
+		properties.put("__LIST_REPORT_TITLE__", listReportTitle);
+		properties.put("__DETAIL_REPORT_TITLE__", detailReportTitle);
 		properties.put("__CONTROLLER_PACKAGE__", finalControllerPackage);
 
 		Map<String, String> templateMap = new HashMap<String, String>();
@@ -438,6 +540,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 				"WEB-INF" + separator + "reports" + separator
 						+ entityName.toLowerCase() + "ReportList.jrxml"),
 				"reportList.jrxml-template");
+
+		templateMap.put(pathResolver.getIdentifier(
+				Path.SRC_MAIN_WEBAPP,
+				"WEB-INF" + separator + "reports" + separator
+						+ entityName.toLowerCase() + "ReportDetail.jrxml"),
+				"reportDetail.jrxml-template");
 
 		for (Entry<String, String> entry : templateMap.entrySet()) {
 
@@ -462,8 +570,10 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		}
 
 		insertViewDeclarations(entityName);
-		insertJasperooMessages(reportTitle, getPlural(entityName));
-		modifyListReportController(entityName, finder, finalEntityPackage, finalControllerPackage);
+		insertJasperooMessages(listReportTitle, getPlural(entityName));
+		insertJasperooMessages(detailReportTitle, entityName);
+		
+		modifyReportController(entityName, finder, finalEntityPackage, finalControllerPackage);
 
 	}
 
@@ -495,6 +605,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 				out.write(entityName.toLowerCase()
 						+ "ReportList.(class)=ca.digitalface.jasperoo.reports.CustomJasperReportsMultiFormatView\n");
 
+				out.write(entityName.toLowerCase()
+						+ "ReportDetail.url=/WEB-INF/reports/"
+						+ entityName.toLowerCase() + "ReportDetail.jasper\n");
+				out.write(entityName.toLowerCase()
+						+ "ReportDetail.(class)=ca.digitalface.jasperoo.reports.CustomJasperReportsMultiFormatView\n");
+
 				out.close();
 
 			} else {
@@ -507,65 +623,155 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		}
 
 	}
-
+	
 	/**
-	 * Inserts the required request handling method into the ReportController for a "List" report.
+	 * Modifies the "List" report template to add all of the fields in the 
+	 * entity being listed.
 	 * 
-	 * @param entityName The Object upon which the report is based.
-	 * @param finalEntityPackage The properly formatted package of the entity in question.
-	 * @param finalControllerPackage The properly formatted package of the ReportController.
+	 * @param javaType The JavaType of the entity being listed.
+	 * @param entityName The name of the entity being listed.
 	 */
-	private void modifyListReportController(String entityName, String finder, String finalEntityPackage, String finalControllerPackage) {
-		String controllerFile = pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
-				finalControllerPackage.replace('.', separator) + separator
-						+ "ReportController.java");
+	private void modifyDetailReportTemplate(JavaType javaType, String entityName){
+		String reportPath = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, 
+				"WEB-INF/reports/"+entityName.toLowerCase()+"ReportDetail.jrxml");
 
-		MutableFile mutableControllerFile = null;
-
+		MutableFile mutableReportXml = null;
+		Document reportDoc;
 		try {
-			if (fileManager.exists(controllerFile)) {
-				mutableControllerFile = fileManager.updateFile(controllerFile);
-				String originalData = convertStreamToString(mutableControllerFile
-						.getInputStream());
-				originalData = originalData.substring(0,
-						originalData.lastIndexOf("}"));
-				String closingBrace = "}";
-
-				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
-						mutableControllerFile.getOutputStream()));
-
-				out.write(originalData);
-				out.write("\t@RequestMapping(value =\"/"
-						+ entityName.toLowerCase()
-						+ "List/{format}\", method = RequestMethod.GET)\n");
-				out.write("\tpublic String report"
-						+ entityName
-						+ "List(ModelMap modelMap, @PathVariable(\"format\") String format) {\n");
-				if(finder == null){
-					out.write("\t\tJRBeanCollectionDataSource jrDataSource = new JRBeanCollectionDataSource("
-							+ finalEntityPackage + "." + entityName + ".findAll" + getPlural(entityName) + "(),false);\n");
-				} else {
-					out.write("\t\tJRBeanCollectionDataSource jrDataSource = new JRBeanCollectionDataSource("
-							+ finalEntityPackage + "." + entityName + "." + finder + "(),false);\n");
-				}
-				out.write("\t\tmodelMap.put(\"reportData\", jrDataSource);\n");
-				out.write("\t\tmodelMap.put(\"format\", format);\n");
-				out.write("\t\treturn \"" + entityName.toLowerCase()
-						+ "ReportList\";\n");
-				out.write("\t}\n\n");
-				out.write(closingBrace);
-
-				out.close();
-
+			if (fileManager.exists(reportPath)) {
+				mutableReportXml = fileManager.updateFile(reportPath);
+				reportDoc = XmlUtils.getDocumentBuilder().parse(mutableReportXml.getInputStream());
 			} else {
-				throw new IllegalStateException("Could not acquire "
-						+ controllerFile);
+				throw new IllegalStateException("Could not acquire " + reportPath);
 			}
 		} catch (Exception e) {
-			System.out.println("---> " + e.getMessage());
 			throw new IllegalStateException(e);
 		}
 
+		Element detailNode = (Element)reportDoc.getDocumentElement().getElementsByTagName("detail").item(0);
+		Node detailBand = XmlUtils.findFirstElementByName("band", detailNode);
+
+		// The id field is 20 px high, so we start there and add the field width on each pass.
+		int offsetY = 20;
+		
+		// determine the total number of fields
+		int fieldCount = getJavaTypeDetails(javaType).getDeclaredFields().size();
+		MutableClassOrInterfaceTypeDetails details = getJavaTypeDetails(javaType);
+		List<JavaType> extendsTypes = details.getExtendsTypes();
+		
+		// We need to know how many fields can be accessed from the hierarchy of this class.
+		// Unfortunately, the list that comes back from getDeclaredFields is an "unmodifiableList", 
+		// so we can't just concatenate all lists and iterate through a super-list.
+		boolean bExtender = extendsTypes != null && extendsTypes.size() > 0;
+		while(bExtender){
+			JavaType tempType = details.getExtendsTypes().get(0);
+			List<? extends FieldMetadata> fields = getJavaTypeDetails(tempType).getDeclaredFields();
+			fieldCount = fieldCount + fields.size();
+			
+			details = getJavaTypeDetails(tempType);
+			extendsTypes = details.getExtendsTypes();
+			bExtender = extendsTypes != null && extendsTypes.size() > 0;
+		}
+
+		details = getJavaTypeDetails(javaType);
+		List<? extends FieldMetadata> fields = getJavaTypeDetails(javaType).getDeclaredFields();
+		bExtender = true;
+		while(bExtender){
+			int fieldHeight = (641 - 20)/ fieldCount;
+			if(fieldHeight > 20){
+				fieldHeight = 20;
+			}
+			
+			for (FieldMetadata fieldMetadata : fields) {
+				JavaType fieldType = fieldMetadata.getFieldType();
+				boolean bValidType = Arrays.binarySearch(jasperFacetValidTypes, fieldType.getFullyQualifiedTypeName()) >= 0;
+				
+				JavaSymbolName fieldName = fieldMetadata.getFieldName();
+				insertJasperooMessages("jasperoo."+getPlural(entityName)+"."+fieldName.getSymbolName(), fieldName.getReadableSymbolName());
+				
+				Element pageHeaderNode = XmlUtils.findFirstElementByName("pageHeader", reportDoc.getDocumentElement());
+
+				Element fieldNode = new XmlElementBuilder("field", reportDoc)
+					.addAttribute("name", fieldName.getSymbolName())
+					.addAttribute("class", fieldType.getFullyQualifiedTypeName())
+					.build();
+		
+				reportDoc.getDocumentElement().insertBefore(fieldNode, pageHeaderNode);
+
+				if(!bValidType){
+					Element firstFieldNode = XmlUtils.findFirstElementByName("field", reportDoc.getDocumentElement());
+	
+					Element importNode = new XmlElementBuilder("import", reportDoc)
+						.addAttribute("value", fieldType.getFullyQualifiedTypeName())
+						.build();
+			
+					reportDoc.getDocumentElement().insertBefore(importNode, firstFieldNode);
+				}
+
+				Element headerTextfield = new XmlElementBuilder("textField", reportDoc)
+					.addChild(new XmlElementBuilder("reportElement", reportDoc)
+						.addAttribute("x", "0")
+						.addAttribute("y", String.valueOf(offsetY))
+						.addAttribute("width", "125")
+						.addAttribute("height", String.valueOf(fieldHeight))
+						.build())
+					.addChild(new XmlElementBuilder("textElement", reportDoc).build())
+					.addChild(new XmlElementBuilder("textFieldExpression", reportDoc)
+						.addAttribute("class", "java.lang.String")
+						.setText("$R{jasperoo."+getPlural(entityName)+"."+fieldName.getSymbolName()+"}")
+						.build())
+					.build();
+			
+				detailBand.appendChild(headerTextfield);
+
+				Element detailTextfield = null;
+				if(bValidType){
+					detailTextfield = new XmlElementBuilder("textField", reportDoc)
+					.addChild(new XmlElementBuilder("reportElement", reportDoc)
+						.addAttribute("x", "126")
+						.addAttribute("y", String.valueOf(offsetY))
+						.addAttribute("width", "446")
+						.addAttribute("height", String.valueOf(fieldHeight))
+						.build())
+					.addChild(new XmlElementBuilder("textElement", reportDoc).build())
+					.addChild(new XmlElementBuilder("textFieldExpression", reportDoc)
+						.addAttribute("class", fieldType.getFullyQualifiedTypeName())
+						.setText("$F{"+fieldName.getSymbolName()+"}")
+						.build())
+					.build();
+				} else {
+					detailTextfield = new XmlElementBuilder("textField", reportDoc)
+						.addChild(new XmlElementBuilder("reportElement", reportDoc)
+						.addAttribute("x", "126")
+						.addAttribute("y", String.valueOf(offsetY))
+						.addAttribute("width", "446")
+						.addAttribute("height", String.valueOf(fieldHeight))
+						.build())
+					.addChild(new XmlElementBuilder("textElement", reportDoc).build())
+					.addChild(new XmlElementBuilder("textFieldExpression", reportDoc)
+						.addAttribute("class", "java.lang.String")
+						.setText("$F{"+fieldName.getSymbolName()+"}.toString()")
+						.build())
+					.build();
+				}
+		
+				detailBand.appendChild(detailTextfield);
+				
+				offsetY += fieldHeight;
+			}
+			
+			// Do we keep going?
+			extendsTypes = details.getExtendsTypes();
+			bExtender = extendsTypes != null && extendsTypes.size() > 0;
+			if(bExtender){
+				JavaType tempType = details.getExtendsTypes().get(0);
+				details = getJavaTypeDetails(tempType);
+				fields = details.getDeclaredFields();
+			}
+		}
+
+		XmlUtils.writeXml(mutableReportXml.getOutputStream(), reportDoc);		
+		
 	}
 
 	/**
@@ -718,6 +924,159 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	}
 	
 	/**
+	 * Inserts the required request handling method into the ReportController for a "List" report.
+	 * 
+	 * @param entityName The Object upon which the report is based.
+	 * @param finalEntityPackage The properly formatted package of the entity in question.
+	 * @param finalControllerPackage The properly formatted package of the ReportController.
+	 */
+	private void modifyReportController(String entityName, String finder, String finalEntityPackage, String finalControllerPackage) {
+		String controllerFile = pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ReportController.java");
+
+		MutableFile mutableControllerFile = null;
+
+		try {
+			if (fileManager.exists(controllerFile)) {
+				mutableControllerFile = fileManager.updateFile(controllerFile);
+				String originalData = convertStreamToString(mutableControllerFile
+						.getInputStream());
+				originalData = originalData.substring(0,
+						originalData.lastIndexOf("}"));
+				String closingBrace = "}";
+
+				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+						mutableControllerFile.getOutputStream()));
+
+				out.write(originalData);
+				out.write("\t@RequestMapping(value =\"/"
+						+ entityName.toLowerCase()
+						+ "List/{format}\", method = RequestMethod.GET)\n");
+				out.write("\tpublic String report"
+						+ entityName
+						+ "List(ModelMap modelMap, @PathVariable(\"format\") String format) {\n");
+				if(finder == null){
+					out.write("\t\tJRBeanCollectionDataSource jrDataSource = new JRBeanCollectionDataSource("
+							+ finalEntityPackage + "." + entityName + ".findAll" + getPlural(entityName) + "(),false);\n");
+				} else {
+					out.write("\t\tJRBeanCollectionDataSource jrDataSource = new JRBeanCollectionDataSource("
+							+ finalEntityPackage + "." + entityName + "." + finder + "(),false);\n");
+				}
+				out.write("\t\tmodelMap.put(\"reportData\", jrDataSource);\n");
+				out.write("\t\tmodelMap.put(\"format\", format);\n");
+				out.write("\t\treturn \"" + entityName.toLowerCase()
+						+ "ReportList\";\n");
+				out.write("\t}\n\n");
+				
+				out.write("\t@RequestMapping(value =\"/"+entityName.toLowerCase()+"Detail/{id}/{format}\", method = RequestMethod.GET)\n");
+				out.write("\tpublic String report"
+						+ entityName
+						+ "Detail(ModelMap modelMap, @PathVariable(\"id\") Long id, @PathVariable(\"format\") String format) {\n");
+				out.write("\t\tJRBeanCollectionDataSource jrDataSource = new JRBeanCollectionDataSource("
+							+ finalEntityPackage + "." + entityName + ".find" + getPlural(entityName) + "ById(id).getResultList(),false);\n");
+				out.write("\t\tmodelMap.put(\"reportData\", jrDataSource);\n");
+				out.write("\t\tmodelMap.put(\"format\", format);\n");
+				out.write("\t\treturn \""+entityName.toLowerCase()+"ReportDetail\";\n");
+				out.write("\t}\n\n");
+				
+				out.write(closingBrace);
+
+				out.close();
+
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ controllerFile);
+			}
+		} catch (Exception e) {
+			System.out.println("---> " + e.getMessage());
+			throw new IllegalStateException(e);
+		}
+
+	}
+
+	/**
+	 * Modifies the "List" report template to add all of the fields in the 
+	 * entity being listed.
+	 * 
+	 * @param javaType The JavaType of the entity being listed.
+	 * @param entityName The name of the entity being listed.
+	 */
+	private void modifyShowTagx(String reportFormat){
+		String docPath = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, 
+				"WEB-INF/tags/form/show.tagx");
+
+		MutableFile mutableDocXml = null;
+		Document targetDoc;
+		try {
+			if (fileManager.exists(docPath)) {
+				mutableDocXml = fileManager.updateFile(docPath);
+				targetDoc = XmlUtils.getDocumentBuilder().parse(mutableDocXml.getInputStream());
+			} else {
+				throw new IllegalStateException("Could not acquire " + docPath);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+
+		Element targetDiv = XmlUtils.findFirstElementByName("div", targetDoc.getDocumentElement());
+
+		/*
+		 *	<c:catch>
+		 *	    <c:if test="${not empty object.reportable}">
+		 *           <span>
+		 *               <spring:url value="/reports/${fn:toLowerCase(typeName)}Detail/${itemId}/pdf" var="report_url" />
+		 *               <spring:url value="/resources/images/report.png" var="report_image_url" />
+		 *               <spring:message arguments="${typeName}" code="entity_detail_report" var="report_label" htmlEscape="false" />
+		 *               <a href="${fn:escapeXml(report_url)}" alt="${fn:escapeXml(report_label)}" title="${fn:escapeXml(report_label)}">
+		 *                 <img alt="${fn:escapeXml(report_label)}" class="image" src="${fn:escapeXml(report_image_url)}" title="${fn:escapeXml(report_label)}" />
+		 *               </a>
+		 *           </span>
+		 *	    </c:if>
+		 *   </c:catch>
+		 */
+
+		Element catchNode = new XmlElementBuilder("c:catch", targetDoc)
+			.addChild(new XmlElementBuilder("c:if", targetDoc)
+				.addAttribute("test", "${not empty object.reportable}")
+				.build())
+				.addChild(new XmlElementBuilder("span", targetDoc)
+					.build())
+					.addChild(new XmlElementBuilder("spring:url", targetDoc)
+						.addAttribute("value", "/reports/${fn:toLowerCase(typeName)}Detail/${itemId}/"+reportFormat)
+						.addAttribute("var", "report_url")
+						.build())
+					.addChild(new XmlElementBuilder("spring:url", targetDoc)
+						.addAttribute("value", "/resources/images/report-"+reportFormat+".png")
+						.addAttribute("var", "report_image_url")
+						.build())
+					.addChild(new XmlElementBuilder("spring:message", targetDoc)
+						.addAttribute("arguments", "${typeName}")
+						.addAttribute("code", "entity_detail_report")
+						.addAttribute("var", "report_label")
+						.addAttribute("htmlEscape", "false")
+						.build())
+					.addChild(new XmlElementBuilder("a", targetDoc)
+						.addAttribute("href", "${fn:escapeXml(report_url)}")
+						.addAttribute("alt", "${fn:escapeXml(report_label)}")
+						.addAttribute("title", "${fn:escapeXml(report_label)}")
+						.addChild(new XmlElementBuilder("img", targetDoc)
+							.addAttribute("class", "image")
+							.addAttribute("alt", "${fn:escapeXml(report_label)}")
+							.addAttribute("title", "${fn:escapeXml(report_label)}")
+							.addAttribute("src", "${fn:escapeXml(report_image_url)}")
+							.build())
+						.build())
+			.build();
+
+		targetDiv.appendChild(catchNode);		
+		
+
+		XmlUtils.writeXml(mutableDocXml.getOutputStream(), targetDoc);		
+		
+	}
+	
+	/**
 	 * Manipulates the menu.jspx file to add the entries required for this report.
 	 * 
 	 * @param lowerCaseEntityName The name of the entity in question, in lower case.
@@ -810,6 +1169,36 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			System.out.println("---> " + e.getMessage());
 			throw new IllegalStateException(e);
 		}
+
+		String messagesProperties = pathResolver.getIdentifier(
+				Path.SRC_MAIN_WEBAPP, "WEB-INF/i18n/messages.properties");
+
+		MutableFile mutableMessagesProperties = null;
+
+		try {
+			if (fileManager.exists(messagesProperties)) {
+				mutableMessagesProperties = fileManager.updateFile(messagesProperties);
+				String originalData = convertStreamToString(mutableMessagesProperties.getInputStream());
+
+				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+						mutableMessagesProperties.getOutputStream()));
+
+				out.write(originalData);
+				out.write("\n");
+				out.write("#reports\n");
+				out.write("entity_detail_report={0} Detail report\n");
+
+				out.close();
+
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ messagesProperties);
+			}
+		} catch (Exception e) {
+			System.out.println("---> " + e.getMessage());
+			throw new IllegalStateException(e);
+		}
+
 
 	}
 
@@ -987,4 +1376,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		
 		return result;
 	}
+	
+
 }

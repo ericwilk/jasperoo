@@ -4,7 +4,7 @@
   <groupId>ca.digitalface</groupId>
   <artifactId>ca.digitalface.jasperoo</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.1.BUILD-SNAPSHOT</version>
+  <version>0.1.2.BUILD-SNAPSHOT</version>
   <name>DigitalFace - jasperoo</name>
   <organization>
     <name>Digital Face</name>
@@ -51,6 +51,11 @@
       <artifactId>org.osgi.compendium</artifactId>
       <version>4.1.0</version>
     </dependency>
+        <dependency>
+            <groupId>org.springframework.roo</groupId>
+            <artifactId>org.springframework.roo.support.osgi</artifactId>
+            <version>${roo.version}</version>
+        </dependency>
     <!-- Apache Felix -->
     <dependency>
       <groupId>org.apache.felix</groupId>
