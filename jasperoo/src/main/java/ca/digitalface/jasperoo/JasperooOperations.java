@@ -21,23 +21,22 @@ public interface JasperooOperations {
 	 * Add a report based on the provided Java type.
 	 * 
 	 * @param type The entity to list in this report.
-	 * @param id If specified, a "Detail" report is generated for the entity identified, otherwise a "List" report is generated.
 	 * @param finder help = "If specified, this finder will produce the resultset to be passed to the report.
 	 * @param entityPackage The location of the Entities. Default: "~.domain".
 	 * @param controllerPackage The location of the Web Controllers. Default: "~.web".
 	 */
-	void addReportByType(JavaType type, Long id, String finder, String entityPackage, String controllerPackage);
+	void addReportByType(JavaType type, String finder, String entityPackage, String controllerPackage);
 
 	/**
 	 * Add a List report for all Java types.
 	 * @param entityPackage The location of the Entities. Default: "~.domain".
 	 * @param controllerPackage The location of the Web Controllers. Default: "~.web".
 	 */
-	void addListReportForAll(String entityPackage, String controllerPackage);
+	void addReportsForAll(String entityPackage, String controllerPackage);
 
 	/**
 	 * Setup all add-on artifacts
 	 * @param controllerPackage The location of the Web Controllers. Default: "~.web".
 	 */
-	void setup(String controllerPackage);
+	void setup(String controllerPackage, String formats);
 }

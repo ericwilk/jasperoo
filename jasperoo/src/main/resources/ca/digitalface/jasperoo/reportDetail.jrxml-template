@@ -1,39 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="__ENTITY_NAME_LOWER__ReportList" pageWidth="792" pageHeight="612" orientation="Landscape" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="jasperoo" whenResourceMissingType="Key">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="__ENTITY_NAME_LOWER__ReportDetail" pageWidth="612" pageHeight="792" orientation="Portrait" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="jasperoo" whenResourceMissingType="Key">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<field name="id" class="java.lang.Long"/>
 	<pageHeader>
-		<band height="101">
+		<band height="85">
 			<image scaleImage="RetainShape" hAlign="Center">
-				<reportElement x="0" y="0" width="752" height="70"/>
+				<reportElement x="0" y="0" width="572" height="53"/>
 				<imageExpression class="java.lang.String"><![CDATA["../../images/banner-graphic.png"]]></imageExpression>
 			</image>
 			<textField>
-				<reportElement mode="Opaque" x="0" y="70" width="752" height="31" forecolor="#000000"/>
+				<reportElement mode="Opaque" x="0" y="54" width="572" height="31" forecolor="#000000"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="FreeSerif" size="24" isBold="true" isItalic="false" isPdfEmbedded="true"/>
 				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$R{__LIST_REPORT_TITLE__}]]></textFieldExpression>
+				<textFieldExpression class="java.lang.String"><![CDATA[$R{__DETAIL_REPORT_TITLE__}]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
-	<columnHeader>
+	<detail>
 		<!-- Edit this band with entries for each field that is to be displayed in the report. -->
-		<band height="20" splitType="Stretch">
+		<band height="642" splitType="Stretch">
 			<textField>
-				<reportElement x="0" y="0" width="30" height="20"/>
+				<reportElement x="0" y="0" width="125" height="20"/>
 				<textElement/>
 				<textFieldExpression class="java.lang.String">$R{jasperoo.id}</textFieldExpression>
 			</textField>
-		</band>
-	</columnHeader>
-	<detail>
-		<!-- Edit this band with entries for each field that is to be displayed in the report. -->
-		<band height="24" splitType="Stretch">
 			<textField>
-				<reportElement x="0" y="0" width="30" height="20"/>
+				<reportElement x="126" y="0" width="446" height="20"/>
 				<textElement/>
 				<textFieldExpression class="java.lang.Long">$F{id}</textFieldExpression>
 			</textField>
