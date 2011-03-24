@@ -37,9 +37,14 @@ public class JasperooCommands implements CommandMarker {
 	 * @return true (default) if the command should be visible at this stage, false otherwise
 	 *  
 	 */
-	@CliAvailabilityIndicator({"jasperoo setup", "jasperoo add", "jasperoo all" })
+	@CliAvailabilityIndicator({"jasperoo setup" })
+	public boolean isSetupAvailable() {
+		return operations.isCommandAvailable("setup");
+	}
+
+	@CliAvailabilityIndicator({"jasperoo add", "jasperoo all", "jasperoo extend" })
 	public boolean isCommandAvailable() {
-		return operations.isCommandAvailable();
+		return operations.isCommandAvailable("other");
 	}
 
 	/**
@@ -81,4 +86,15 @@ public class JasperooCommands implements CommandMarker {
 			@CliOption(key = "formats", mandatory = false, help = "A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: \"pdf,xls\".", unspecifiedDefaultValue="pdf,xls") String formats) {
 		operations.setup(controllerPackage, formats);
 	}
+
+	/**
+	 * Extend Jasperoo to support additional formats.
+	 * 
+	 * @param formats <b>not mandatory</b>, A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
+	 */
+	@CliCommand(value = "jasperoo extend", help = "Extend Jasperoo to support additional formats.")
+	public void extend(@CliOption(key = "formats", mandatory = false, help = "A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: \"pdf,xls\".", unspecifiedDefaultValue="pdf,xls") String formats) {
+		operations.extend(formats);
+	}
+
 }

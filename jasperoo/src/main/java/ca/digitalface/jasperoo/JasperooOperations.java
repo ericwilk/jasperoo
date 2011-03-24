@@ -15,7 +15,7 @@ public interface JasperooOperations {
 	 * 
 	 * @return true if it should be available, otherwise false
 	 */
-	boolean isCommandAvailable();
+	boolean isCommandAvailable(String commandName);
 
 	/**
 	 * Add a report based on the provided Java type.
@@ -37,6 +37,16 @@ public interface JasperooOperations {
 	/**
 	 * Setup all add-on artifacts
 	 * @param controllerPackage The location of the Web Controllers. Default: "~.web".
+	 * @param formats A comma separated list of report formats to support. 
+	 * 					Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls"
 	 */
 	void setup(String controllerPackage, String formats);
+
+	/**
+	 * Extend Jasperoo to support additional formats.
+	 * 
+	 * @param formats A comma separated list of report formats to support. 
+	 * 					Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls"
+	 */
+	void extend(String formats);
 }

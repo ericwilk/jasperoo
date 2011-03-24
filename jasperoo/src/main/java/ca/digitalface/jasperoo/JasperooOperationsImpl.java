@@ -131,11 +131,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 					"java.lang.String"};
 	
 	private static String[] validReportFormats = new String[]{"csv", "html", "odt", "pdf", "rtf", "xls", "xml"};
-	
+
 	/** {@inheritDoc} */
-	public boolean isCommandAvailable() {
-		// Check if a project has been created
-		return projectOperations.isProjectAvailable();
+	public boolean isCommandAvailable(String commandName) {
+		boolean bReady = false;
+		bReady = projectOperations.isProjectAvailable();
+		return bReady;
 	}
 
 	/** {@inheritDoc} */
@@ -186,7 +187,9 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		modifyDetailReportTemplate(javaType, entityName);
 		
 		// generate menu entry
-		addMenuEntry(entityName.toLowerCase());
+		// Let's see if this is even needed.
+		// addMenuEntry(entityName.toLowerCase());
+		
 		insertI18nAddMessages(entityName);
 
 	}
@@ -202,6 +205,22 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		}
 	}
 
+	/** {@inheritDoc} */
+	public void extend(String formats){
+		if(StringUtils.hasText(formats)){
+			StringTokenizer stFormats = new StringTokenizer(formats,",", false);
+			while(stFormats.hasMoreTokens()){
+				String format = stFormats.nextToken().trim();
+				if(Arrays.asList(validReportFormats).contains(format)){
+					modifyListTagx(format);
+					modifyShowTagx(format);
+				} else {
+					System.out.println("JASPEROO: '"+format + "' is not a valid report format, it will be ignored.");
+				}
+			}
+		}
+	}
+	
 	/** {@inheritDoc} */
 	public void setup(String controllerPackage, String formats) {
 		
@@ -363,17 +382,9 @@ public class JasperooOperationsImpl implements JasperooOperations {
 
 		copySetupFilesIntoProject(controllerPackage);
 		
-		if(StringUtils.hasText(formats)){
-			StringTokenizer stFormats = new StringTokenizer(formats,",", false);
-			while(stFormats.hasMoreTokens()){
-				String format = stFormats.nextToken();
-				if(Arrays.binarySearch(validReportFormats,format) >= 0){
-					modifyShowTagx(format);
-				} else {
-					System.out.println(format + " is not a valid report format, it will be ignored.");
-				}
-			}
-		}
+		setupListTagx();
+		extend(formats);
+		
 	}
 
 	/**
@@ -949,6 +960,15 @@ public class JasperooOperationsImpl implements JasperooOperations {
 				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
 						mutableControllerFile.getOutputStream()));
 
+				if(originalData.contains("report"+ entityName+ "List") || originalData.contains("report"+ entityName+ "Detail")){
+					System.out.println("\nJASPEROO MANUAL INTERVENTION NEEDED!\n");
+					if(originalData.contains("report"+ entityName+ "List")){
+						System.out.println("-ReportController.java has more than one method named report"+ entityName+ "List()\n");
+					}
+					if(originalData.contains("report"+ entityName+ "Detail")){
+						System.out.println("-ReportController.java has more than one method named report"+ entityName+ "Detail()\n");
+					}
+				}
 				out.write(originalData);
 				out.write("\t@RequestMapping(value =\"/"
 						+ entityName.toLowerCase()
@@ -1002,6 +1022,140 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	 * @param javaType The JavaType of the entity being listed.
 	 * @param entityName The name of the entity being listed.
 	 */
+	private void modifyListTagx(String reportFormat){
+		String docPath = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, 
+				"WEB-INF/tags/form/list.tagx");
+
+		MutableFile mutableDocXml = null;
+		Document targetDoc;
+		try {
+			if (fileManager.exists(docPath)) {
+				mutableDocXml = fileManager.updateFile(docPath);
+				targetDoc = XmlUtils.getDocumentBuilder().parse(mutableDocXml.getInputStream());
+			} else {
+				throw new IllegalStateException("Could not acquire " + docPath);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+
+		Node target = XmlUtils.findFirstElementByName("jsp:doBody", targetDoc.getDocumentElement()).getParentNode();
+
+		/*
+		 *	<c:catch>
+		 *	    <c:if test="${not empty object.reportable}">
+		 *           <span>
+		 *               <spring:url value="/reports/${fn:toLowerCase(typeName)}List/${itemId}/pdf" var="report_url" />
+		 *               <spring:url value="/resources/images/report.png" var="report_image_url" />
+		 *               <spring:message arguments="${typeName}" code="entity_list_report" var="report_label" htmlEscape="false" />
+		 *               <a href="${fn:escapeXml(report_url)}" alt="${fn:escapeXml(report_label)}" title="${fn:escapeXml(report_label)}">
+		 *                 <img alt="${fn:escapeXml(report_label)}" class="image" src="${fn:escapeXml(report_image_url)}" title="${fn:escapeXml(report_label)}" />
+		 *               </a>
+		 *           </span>
+		 *	    </c:if>
+		 *   </c:catch>
+		 */
+
+		Element catchNode = new XmlElementBuilder("c:catch", targetDoc)
+			.addChild(new XmlElementBuilder("c:if", targetDoc)
+				.addAttribute("test", "${not empty items[0].reportable}")
+				.addChild(new XmlElementBuilder("span", targetDoc)
+					.addAttribute("style", "text-align:right;")
+					.build())
+					.addChild(new XmlElementBuilder("spring:url", targetDoc)
+						.addAttribute("value", "/reports/${fn:toLowerCase(label)}List/"+reportFormat)
+						.addAttribute("var", "report_url")
+						.build())
+					.addChild(new XmlElementBuilder("spring:url", targetDoc)
+						.addAttribute("value", "/resources/images/report-"+reportFormat+".png")
+						.addAttribute("var", "report_image_url")
+						.build())
+					.addChild(new XmlElementBuilder("spring:message", targetDoc)
+						.addAttribute("arguments", "${label}")
+						.addAttribute("code", "entity_list_report")
+						.addAttribute("var", "report_label")
+						.addAttribute("htmlEscape", "false")
+						.build())
+					.addChild(new XmlElementBuilder("a", targetDoc)
+						.addAttribute("href", "${fn:escapeXml(report_url)}")
+						.addAttribute("alt", "${fn:escapeXml(report_label)}")
+						.addAttribute("title", "${fn:escapeXml(report_label)}")
+						.addChild(new XmlElementBuilder("img", targetDoc)
+							.addAttribute("class", "image")
+							.addAttribute("alt", "${fn:escapeXml(report_label)}")
+							.addAttribute("title", "${fn:escapeXml(report_label)}")
+							.addAttribute("src", "${fn:escapeXml(report_image_url)}")
+							.build())
+						.build())
+				.build())
+			.build();
+
+		target.appendChild(catchNode);		
+		
+
+		XmlUtils.writeXml(mutableDocXml.getOutputStream(), targetDoc);		
+		
+	}
+	
+	/**
+	 * Sets up the "List" tag.
+	 */
+	private void setupListTagx(){
+		String docPath = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, 
+				"WEB-INF/tags/form/list.tagx");
+
+		MutableFile mutableDocXml = null;
+		Document targetDoc;
+		try {
+			if (fileManager.exists(docPath)) {
+				mutableDocXml = fileManager.updateFile(docPath);
+				targetDoc = XmlUtils.getDocumentBuilder().parse(mutableDocXml.getInputStream());
+			} else {
+				throw new IllegalStateException("Could not acquire " + docPath);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+
+		Node target = XmlUtils.findFirstElementByName("jsp:doBody", targetDoc.getDocumentElement()).getParentNode();
+
+		/*
+		 *	<c:catch>
+		 *		<c:if test="${not empty object.reportable}"/>
+		 *			<spring:message code="jasperoo_reports" htmlEscape="false" var="reports_label"/>
+		 *			<b><c:out value="${reports_label} "/></b>
+		 *		</c:if>
+		 *	</c:catch>
+		 */
+
+		Element catchNode = new XmlElementBuilder("c:catch", targetDoc)
+			.addChild(new XmlElementBuilder("c:if", targetDoc)
+				.addAttribute("test", "${not empty items[0].reportable}")
+				.addChild(new XmlElementBuilder("spring:message", targetDoc)
+					.addAttribute("code", "jasperoo_reports")
+					.addAttribute("htmlEscape", "false")
+					.addAttribute("var", "reports_label")
+					.build())
+				.addChild(new XmlElementBuilder("b", targetDoc)
+					.addChild(new XmlElementBuilder("c:out", targetDoc)
+						.addAttribute("value", "${reports_label} ")
+						.build())
+					.build())
+				.build())
+			.build();
+		target.appendChild(catchNode);		
+			
+		XmlUtils.writeXml(mutableDocXml.getOutputStream(), targetDoc);		
+		
+	}
+	
+	/**
+	 * Modifies the "List" report template to add all of the fields in the 
+	 * entity being listed.
+	 * 
+	 * @param javaType The JavaType of the entity being listed.
+	 * @param entityName The name of the entity being listed.
+	 */
 	private void modifyShowTagx(String reportFormat){
 		String docPath = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, 
 				"WEB-INF/tags/form/show.tagx");
@@ -1039,7 +1193,6 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		Element catchNode = new XmlElementBuilder("c:catch", targetDoc)
 			.addChild(new XmlElementBuilder("c:if", targetDoc)
 				.addAttribute("test", "${not empty object.reportable}")
-				.build())
 				.addChild(new XmlElementBuilder("span", targetDoc)
 					.build())
 					.addChild(new XmlElementBuilder("spring:url", targetDoc)
@@ -1067,6 +1220,7 @@ public class JasperooOperationsImpl implements JasperooOperations {
 							.addAttribute("src", "${fn:escapeXml(report_image_url)}")
 							.build())
 						.build())
+				.build())
 			.build();
 
 		targetDiv.appendChild(catchNode);		
@@ -1184,9 +1338,11 @@ public class JasperooOperationsImpl implements JasperooOperations {
 						mutableMessagesProperties.getOutputStream()));
 
 				out.write(originalData);
-				out.write("\n");
+				out.write("\n\n");
 				out.write("#reports\n");
-				out.write("entity_detail_report={0} Detail report\n");
+				out.write("jasperoo_reports=Reports:\n");
+				out.write("entity_list_report={0} List Report\n");
+				out.write("entity_detail_report={0} Detail Report\n");
 
 				out.close();
 
