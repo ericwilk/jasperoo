@@ -16,6 +16,5 @@ public @interface RooJasperoo {
 	
 	String getReportableMethod() default "isReportable";
 	
-	String getReportableField() default "reportable";
 }
 

@@ -39,9 +39,6 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 		Assert.isTrue(isValid(identifier), "Metadata identification string '" + identifier + "' does not appear to be a valid");
 
 		
-		// Adding a new sample field definition
-		builder.addField(getReportableField());
-			
 		// Adding a new sample method definition
 		builder.addMethod(getReportableMethod());
 		
@@ -50,27 +47,10 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 	}
 	
 	/**
-	 * Create metadata for a field definition. 
+	 * Create metadata for a method definition. 
 	 *
-	 * @return a FieldMetadata object
+	 * @return a MethodMetadata object
 	 */
-	private FieldMetadata getReportableField() {
-		// Note private fields are private to the ITD, not the target type, this is undesirable if a dependent method is pushed in to the target type
-		int modifier = 0;
-		
-		ArrayList<AnnotationMetadataBuilder> annotations = new ArrayList<AnnotationMetadataBuilder>();
-		annotations.add(new AnnotationMetadataBuilder(new JavaType("javax.persistence.Transient")));
-		
-		// Using the FieldMetadataBuilder to create the field definition. 
-		FieldMetadataBuilder fieldBuilder = new FieldMetadataBuilder(getId(), // Metadata ID provided by supertype
-			modifier, // Using package protection rather than private
-			annotations, // Using @Transient
-			new JavaSymbolName("reportable"), // Field name
-			JavaType.BOOLEAN_PRIMITIVE); // Field type
-		
-		return fieldBuilder.build(); // Build and return a FieldMetadata instance
-	}
-	
 	private MethodMetadata getReportableMethod() {
 		// Specify the desired method name
 		JavaSymbolName methodName = new JavaSymbolName("isReportable");
@@ -96,8 +76,8 @@ public class JasperooMetadata extends AbstractItdTypeDetailsProvidingMetadataIte
 		
 		// Create the method body
 		InvocableMemberBodyBuilder bodyBuilder = new InvocableMemberBodyBuilder();
-		bodyBuilder.appendFormalLine("reportable = true;");
-		bodyBuilder.appendFormalLine("return reportable;");
+//		bodyBuilder.appendFormalLine("reportable = true;");
+		bodyBuilder.appendFormalLine("return true;");
 		
 		// Use the MethodMetadataBuilder for easy creation of MethodMetadata
 		MethodMetadataBuilder methodBuilder = new MethodMetadataBuilder(getId(), Modifier.PUBLIC, methodName, JavaType.BOOLEAN_PRIMITIVE, parameterTypes, parameterNames, bodyBuilder);
