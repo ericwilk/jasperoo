@@ -1,5 +1,6 @@
 #summary The API of the *add* method in Jasperoo.
 #labels How-To
+#sidebar TableOfContents
 
 = Introduction =
 The *add* method adds support for reporting to a single Roo entity. [JasperooMethodsSetup setup] must be called prior to calling *add*.
