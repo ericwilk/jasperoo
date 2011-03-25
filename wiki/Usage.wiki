@@ -34,10 +34,10 @@ Default is to add a report for an entity in the "~.domain" package with a Contro
 jasperoo add --type ~.domain.Owner
 }}}
 
-Alternatively, you could create a "List" report for all entities with the following:
+Alternatively, you could enable reports for all Roo entities in the host project with the following:
 {{{
 jasperoo all
 }}}
 
-== Future ==
- * Create Detail reports for single entity instances.
+== More ==
+ Refer to the API for the most up-to-date and complete options.
