@@ -18,3 +18,5 @@ addon remove --bundleSymbolicName ca.digitalface.jasperoo
  * [JasperooMethodsAdd add]
  * [JasperooMethodsAll all]
  * [JasperooMethodsExpand expand]
+
+[http://code.google.com/p/jasperoo/ [Return to Project Home]]
