@@ -8,10 +8,12 @@ jasperoo setup [--controllerPackage ~.web] [--formats "pdf,xls"]
 }}}
 
 == Parameters ==
-The setup method accepts the following two parameters:
+The *setup* method accepts the following two parameters:
+
 === controllerPackage ===
 *optional*
 The location of the Web Controllers. Default: "~.web".
+
 === formats ===
 *optional*
 A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
