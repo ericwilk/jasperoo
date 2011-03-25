@@ -1,4 +1,4 @@
-#summary The API of the *add* method in Jasperoo.
+#summary The API of the add method in Jasperoo.
 #labels How-To
 #sidebar TableOfContents
 
