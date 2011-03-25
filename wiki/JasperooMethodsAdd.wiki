@@ -8,6 +8,9 @@ jasperoo add --type ~.domain.SomeType [-- finder findSomeTypeBySomething] [--ent
 }}}
 
 == Parameters ==
+=== type ===
+*required*
+The entity upon which to report.
 === finder ===
 *optional*
 If specified, this finder will produce the resultset to be passed to the List report.
@@ -19,3 +22,5 @@ The location of the Entities. Default: "~.domain".
 === controllerPackage ===
 *optional*
 The location of the Web Controllers. Default: "~.web".
+
+[http://code.google.com/p/jasperoo/wiki/API [Return to API]]
