@@ -1,5 +1,5 @@
 #summary The API of the setup method of Jasperoo.
-#labels How-To
+#labels API
 #sidebar TableOfContents
 
 = Introduction =
