@@ -3,7 +3,7 @@
    * [JasperooMethodsAdd add]
    * [JasperooMethodsAll all]
    * [JasperooMethodsExpand expand]
- * How To
+ * [HowTo How To]
    * [Usage Using Jasperoo]
    * [EditReports Editing Jasper Reports]
    * [SupportForDifferentReportFormats Report Formats]
