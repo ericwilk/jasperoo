@@ -1,5 +1,5 @@
 #summary The application programming interface for jasperoo.
-#labels Featured,How-To
+#labels Featured,API
 #sidebar TableOfContents
 
 = Installation =
