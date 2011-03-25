@@ -30,3 +30,5 @@ jasperoo.page.of=of
 jasperoo.id=ID
 }}}
 jasperoo.properties also contains tags for each entity and each field that is being reported.
+
+[http://code.google.com/p/jasperoo/ [return to Project Home]]
