@@ -1,5 +1,6 @@
 #summary The API of the setup method of Jasperoo.
 #labels How-To
+#sidebar TableOfContents
 
 = Introduction =
 The setup method is the first one to be called after installation of jasperoo.
