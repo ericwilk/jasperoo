@@ -1,5 +1,20 @@
 #summary The application programming interface for jasperoo.
+#labels Featured,How-To
 
-= Setup =
+= Installation =
+The url specified will always point to the latest release of jasperoo. To use an older version, download it from the [http://code.google.com/p/jasperoo/downloads/list downloads page].
+{{{
+osgi start --url http://s.digitalface.ca/jasperoo-latest
+}}}
 
 = Removal =
+Prior to installing a new version of jasperoo, remove the old one.
+{{{
+addon remove --bundleSymbolicName ca.digitalface.jasperoo
+}}}
+
+= Methods =
+ * [JasperooMethodsSetup setup]
+ * [JasperooMethodsAdd add]
+ * [JasperooMethodsAll all]
+ * [JasperooMethodsExpand expand]
