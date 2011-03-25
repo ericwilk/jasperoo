@@ -8,7 +8,8 @@ jasperoo expand --formats "pdf,xls"
 }}}
 
 == Parameters ==
-The expand method expects the following parameter:
+The *expand* method expects the following parameter:
+
 === formats ===
 *required*
 A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
