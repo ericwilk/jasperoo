@@ -2,7 +2,7 @@
    * [JasperooMethodsSetup setup]
    * [JasperooMethodsAdd add]
    * [JasperooMethodsAll all]
-   * [JasperooMethodsExtend extend]
+   * [JasperooMethodsExpand expand]
  * How To
    * [Usage Using Jasperoo]
    * [EditReports Editing Jasper Reports]
