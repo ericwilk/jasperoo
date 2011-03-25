@@ -2,7 +2,7 @@
 #labels How-To
 
 = Introduction =
-The add method adds support for reporting to a single entity. [JasperooMethodsSetup setup] must be called prior to calling add.
+The *add* method adds support for reporting to a single Roo entity. [JasperooMethodsSetup setup] must be called prior to calling *add*.
 {{{
 jasperoo add --type ~.domain.SomeType [-- finder findSomeTypeBySomething] [--entityPackage ~.domain] [--controllerPackage ~.web]
 }}}
