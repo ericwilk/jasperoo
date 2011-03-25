@@ -10,6 +10,7 @@ jasperoo all [--entityPackage ~.domain] [--controllerPackage ~.web]
 }}}
 
 == Parameters ==
+The *all* method accepts the following two parameters:
 === entityPackage ===
 *optional*
 The location of the Entities. Default: "~.domain".
