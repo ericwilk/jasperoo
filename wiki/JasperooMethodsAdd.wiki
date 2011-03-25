@@ -1,9 +1,21 @@
 #summary The API of the *add* method in Jasperoo.
+#labels How-To
 
 = Introduction =
 The add method adds support for reporting to a single entity. [JasperooMethodsSetup setup] must be called prior to calling add.
 {{{
 jasperoo add --type ~.domain.SomeType [-- finder findSomeTypeBySomething] [--entityPackage ~.domain] [--controllerPackage ~.web]
+}}}
 
-
+== Parameters ==
+=== finder ===
+*optional*
 If specified, this finder will produce the resultset to be passed to the List report.
+
+=== entityPackage ===
+*optional*
+The location of the Entities. Default: "~.domain".
+
+=== controllerPackage ===
+*optional*
+The location of the Web Controllers. Default: "~.web".
