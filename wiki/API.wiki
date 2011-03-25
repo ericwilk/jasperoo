@@ -1,7 +1,6 @@
 #summary The application programming interface for jasperoo.
 #labels Featured,How-To
-
-#sidebar TableOfContents 
+#sidebar TableOfContents
 
 = Installation =
 The url specified will always point to the latest release of jasperoo. To use an older version, download it from the [http://code.google.com/p/jasperoo/downloads/list downloads page].
