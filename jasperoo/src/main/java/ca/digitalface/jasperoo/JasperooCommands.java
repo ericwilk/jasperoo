@@ -51,7 +51,7 @@ public class JasperooCommands implements CommandMarker {
 	 * Generate a report for the entity specified. 
 	 * 
 	 * @param target <b>mandatory</b>, The entity to list in this report.
-	 * @param finder <b>not mandatory</b>, help = "If specified, this finder will produce the resultset to be passed to the List report.
+	 * @param finder <b>not mandatory</b>, help = If specified, this finder will produce the resultset to be passed to the List report.
 	 * @param entityPackage <b>not mandatory</b>, The location of the Entities. Default: "~.domain".
 	 * @param controllerPackage <b>not mandatory</b>, The location of the Web Controllers. Default: "~.web".
 	 */
@@ -90,10 +90,10 @@ public class JasperooCommands implements CommandMarker {
 	/**
 	 * Extend Jasperoo to support additional formats.
 	 * 
-	 * @param formats <b>not mandatory</b>, A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
+	 * @param formats <b>mandatory</b>, A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf.
 	 */
 	@CliCommand(value = "jasperoo extend", help = "Extend Jasperoo to support additional formats.")
-	public void extend(@CliOption(key = "formats", mandatory = false, help = "A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: \"pdf,xls\".", unspecifiedDefaultValue="pdf,xls") String formats) {
+	public void extend(@CliOption(key = "formats", mandatory = true, help = "A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: \"pdf,xls\".") String formats) {
 		operations.extend(formats);
 	}
 
