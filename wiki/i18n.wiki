@@ -1,0 +1,32 @@
+#summary Internationalization in jasperoo.
+#labels Featured,How-To
+
+= Introduction =
+Internationalization in jasperoo is a bit different from standard Roo. In Roo, i18n is handled in `application.properties` and `messages.properties`. In jasperoo, the jasperreports maven plugin requires its i18n properties file to be in a specific position. For the i18n that applies to the reports, we have created jasperoo.properties.
+
+== application.properties ==
+*directory path:* /src/main/webapp/WEB-INF/i18n
+{{{
+label_ca_digitalface_jasperoo_detail=Detail
+label_ca_digitalface_jasperoo_list=List
+label_ca_digitalface_jasperoo_report=Report
+label_ca_digitalface_jasperoo_report_plural=Reports
+}}}
+
+== messages.properties ==
+*directory path:* /src/main/webapp/WEB-INF/i18n
+{{{
+#reports
+jasperoo_reports=Reports:
+entity_list_report={0} List Report
+entity_detail_report={0} Detail Report
+}}}
+
+== jasperoo.properties ==
+*directory path:* /src/main/webapp/WEB-INF/classes
+{{{
+jasperoo.page=Page
+jasperoo.page.of=of
+jasperoo.id=ID
+}}}
+jasperoo.properties also contains tags for each entity and each field that is being reported.
