@@ -1,0 +1,25 @@
+#summary The API of the *expand* method in Jasperoo.
+
+= Introduction =
+The *expand* method adds support for additional formats of reports from a predetermined collection of valid formats. This can also be accomplished by referencing the formats parameter during *setup*. [JasperooMethodsSetup setup] must be called prior to calling *expand*.
+{{{
+jasperoo add --type ~.domain.SomeType [-- finder findSomeTypeBySomething] [--entityPackage ~.domain] [--controllerPackage ~.web]
+}}}
+
+== Parameters ==
+=== type ===
+*required*
+The entity upon which to report.
+=== finder ===
+*optional*
+If specified, this finder will produce the resultset to be passed to the List report.
+
+=== entityPackage ===
+*optional*
+The location of the Entities. Default: "~.domain".
+
+=== controllerPackage ===
+*optional*
+The location of the Web Controllers. Default: "~.web".
+
+[http://code.google.com/p/jasperoo/wiki/API [Return to API]]
