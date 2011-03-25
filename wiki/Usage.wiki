@@ -40,4 +40,4 @@ jasperoo all
 }}}
 
 == More ==
- Refer to the API for the most up-to-date and complete options.
+ Refer to the [API API] for the most up-to-date and complete options.
