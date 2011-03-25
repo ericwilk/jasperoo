@@ -8,6 +8,7 @@ jasperoo add --type ~.domain.SomeType [-- finder findSomeTypeBySomething] [--ent
 }}}
 
 == Parameters ==
+The *add* method accepts the following four parameters:
 === type ===
 *required*
 The entity upon which to report.
