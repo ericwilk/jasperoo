@@ -1,4 +1,5 @@
 #summary The API of the setup method of Jasperoo.
+#labels How-To
 
 = Introduction =
 The setup method is the first one to be called after installation of jasperoo.
@@ -12,3 +13,5 @@ The setup method accepts the following two parameters:
 The location of the Web Controllers. Default: "~.web".
 === formats ===
 A comma separated list of report formats to support. Options: pdf, xls, csv, html, odt, xml, and rtf. Default: "pdf,xls".
+
+[http://code.google.com/p/jasperoo/wiki/API [Return to API]]
