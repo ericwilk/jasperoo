@@ -1,5 +1,6 @@
 #summary Jasperoo can also generate reports in csv, html, odt, xml, and rtf formats.
-#labels Featured,How-To
+#labels How-To
+#sidebar TableOfContents
 
 = Introduction =
 
