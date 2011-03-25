@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary A list of instructional pages that discusses how to perform certain tasks.
 #labels Featured,How-To
 #sidebar TableOfContents
 
