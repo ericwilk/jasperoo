@@ -1,4 +1,5 @@
 #summary Using jasperoo
+#labels Featured,How-To
 
 = Introduction =
 Jasperoo is designed to behave like any other Spring Roo addon. After adding it to the OSGI list, just call *jasperoo setup* and *jasperoo add* to create your first Jasper Report.
