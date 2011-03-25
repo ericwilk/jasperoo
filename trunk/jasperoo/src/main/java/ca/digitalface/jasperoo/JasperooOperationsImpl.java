@@ -112,7 +112,8 @@ public class JasperooOperationsImpl implements JasperooOperations {
 	@Reference
 	private Shell shell;
 
-	private static char separator = File.separatorChar;
+	// Use the Unix separator as we are using this to retrieve files with the classloader. (Was File.separatorChar)
+	private static char separator = '/';
 
 	private ComponentContext context;
 
@@ -266,6 +267,9 @@ public class JasperooOperationsImpl implements JasperooOperations {
 				.build())
 			.addChild(new XmlElementBuilder("executions", pomDoc)
 				.addChild(new XmlElementBuilder("execution", pomDoc)
+					.addChild(new XmlElementBuilder("phase", pomDoc)
+						.setText("compile")
+						.build())
 					.addChild(new XmlElementBuilder("goals", pomDoc)
 						.addChild(new XmlElementBuilder("goal", pomDoc)
 							.setText("compile-reports")
@@ -695,8 +699,8 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			
 			for (FieldMetadata fieldMetadata : fields) {
 				JavaType fieldType = fieldMetadata.getFieldType();
-				boolean bValidType = Arrays.binarySearch(jasperFacetValidTypes, fieldType.getFullyQualifiedTypeName()) >= 0;
-				
+				boolean bValidType = Arrays.asList(jasperFacetValidTypes).contains(fieldType.getFullyQualifiedTypeName());
+
 				JavaSymbolName fieldName = fieldMetadata.getFieldName();
 				insertJasperooMessages("jasperoo."+getPlural(entityName)+"."+fieldName.getSymbolName(), fieldName.getReadableSymbolName());
 				
@@ -844,7 +848,7 @@ public class JasperooOperationsImpl implements JasperooOperations {
 			
 			for (FieldMetadata fieldMetadata : fields) {
 				JavaType fieldType = fieldMetadata.getFieldType();
-				boolean bValidType = Arrays.binarySearch(jasperFacetValidTypes, fieldType.getFullyQualifiedTypeName()) >= 0;
+				boolean bValidType = Arrays.asList(jasperFacetValidTypes).contains(fieldType.getFullyQualifiedTypeName());
 				
 				JavaSymbolName fieldName = fieldMetadata.getFieldName();
 				insertJasperooMessages("jasperoo."+getPlural(entityName)+"."+fieldName.getSymbolName(), fieldName.getReadableSymbolName());
