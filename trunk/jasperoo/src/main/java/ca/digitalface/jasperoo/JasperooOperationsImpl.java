@@ -187,11 +187,12 @@ public class JasperooOperationsImpl implements JasperooOperations {
 		modifyListReportTemplate(javaType, entityName);
 		modifyDetailReportTemplate(javaType, entityName);
 		
-		// generate menu entry
-		// Let's see if this is even needed.
-		// addMenuEntry(entityName.toLowerCase());
-		
-		insertI18nAddMessages(entityName);
+		/*
+		 * 	We probably don't want this, but we won't remove it permanently until we're sure.
+		 *		// generate menu entry
+		 *		addMenuEntry(entityName.toLowerCase());
+		 *		insertI18nAddMessages(entityName);
+		 */
 
 	}
 	
