@@ -4,7 +4,7 @@
   <groupId>ca.digitalface</groupId>
   <artifactId>ca.digitalface.jasperoo</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.4.BUILD-SNAPSHOT</version>
+  <version>0.1.5-RELEASE</version>
   <name>DigitalFace - jasperoo</name>
   <organization>
     <name>Digital Face</name>
@@ -18,7 +18,7 @@
     </license>
   </licenses>
   <description>A Roo add-on to integrate Jasper Reports.</description>
-  <url>https://code.google.com/p/jasperoo/</url>
+  <url>http://jasperoo.digitalface.ca</url>
   <properties>
   	<roo.version>1.1.2.RELEASE</roo.version>
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
