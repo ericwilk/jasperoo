@@ -1,5 +1,15 @@
-Jasperoo is protected by the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 (http://www.gnu.org/licenses/gpl.txt).
+======================================================================
+LEGAL NOTICES
+======================================================================
 
-For information about Jasperoo, please contact DigitalFace at jasperoo@digitalface.ca.
+Jasperoo is copyright (C) 2011 DigitalFace.ca All Rights Reserved. 
+
+Jasperoo is licensed under the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 (http://www.gnu.org/licenses/gpl.txt).
+
+As this is an add-on to Spring Roo, the same licensing caveat applies. The host application that uses Jasperoo is in no way encumbered by the GPL license. The GPL license applies to this software only, not the software you create using it.
+
+For information about Jasperoo, please visit the project site at: http://jasperoo.digitalface.ca or contact DigitalFace at jasperoo@digitalface.ca.
 
 No warranty is offered or implied.
+
+-- End --
