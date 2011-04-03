@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2011 - DigitalFace.ca. All Rights Reserved
+ * Licensed under the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 (http://www.gnu.org/licenses/gpl.txt).
+ */
 package ca.digitalface.jasperoo;
 
 import java.lang.reflect.Modifier;
